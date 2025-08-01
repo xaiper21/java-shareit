@@ -20,30 +20,30 @@ import ru.practicum.shareit.user.service.UserService;
 @AllArgsConstructor
 @ResponseBody
 public class UserController {
-    UserService userService;
+    private final UserService userService;
 
     @PostMapping
     public UserDto addUser(@Valid @RequestBody UserCreateRequestDto user) {
-        log.debug("Adding user {}", user);
+        log.debug("Метод контроллера. Добавление пользователя {}", user);
         return userService.addUser(user);
     }
 
     @PatchMapping("/{userId}")
     public UserDto updateUser(@Valid @RequestBody UserUpdateRequestDto user,
                               @Positive @NotNull @PathVariable Long userId) {
-        log.debug("Updating user {} and userId {}", user, userId);
+        log.debug("Метод контроллера. Обновление пользователя {} с id {}", user, userId);
         return userService.updateUser(user, userId);
     }
 
     @GetMapping("/{userId}")
     public UserDto getUser(@PathVariable Long userId) {
-        log.debug("Getting user by id {}", userId);
+        log.debug("Метод контроллера. Получение пользователя с id{}", userId);
         return userService.getUser(userId);
     }
 
     @DeleteMapping("/{userId}")
     public boolean deleteUser(@PathVariable Long userId) {
-        log.debug("Deleting user by id {}", userId);
+        log.debug("Метод контроллера. Удаление пользователя с id {}", userId);
         return userService.deleteUser(userId);
     }
 }

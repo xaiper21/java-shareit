@@ -20,39 +20,39 @@ import java.util.Collection;
 @RequestMapping("/items")
 @ResponseBody
 public class ItemController {
-    private ItemService itemService;
+    private final ItemService itemService;
 
     @PostMapping
     public ItemDto addItem(@Valid @RequestBody ItemDto itemDto,
                            @RequestHeader("X-Sharer-User-Id") Long userId) {
-        log.debug("Adding new item  {} and headerId {}", itemDto, userId);
+        log.debug("Метод контроллера. Добавление новой вещи {} где id пользователя {}", itemDto, userId);
         return itemService.addItem(itemDto, userId);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@PathVariable("itemId") Long itemId,
                               @RequestHeader("X-Sharer-User-Id") Long userId,
-                              @Valid @RequestBody ItemUpdateRequestDto itemDto) {
-        log.debug("Updating item {} and headerId {}, item id {}", itemId, userId, itemId);
+                              @RequestBody ItemUpdateRequestDto itemDto) {
+        log.debug("Метод контроллера. Обновление вещи {} где id пользователя {}, id вещи {}", itemId, userId, itemId);
         return itemService.updateItem(itemId, userId, itemDto);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemForAll(@PathVariable("itemId") Long itemId) {
-        log.debug("Getting item {} for all", itemId);
-        return itemService.getItemForAll(itemId);
+    public ItemDto getItem(@PathVariable("itemId") Long itemId) {
+        log.debug("Метод контроллера. Получени вещи с id {} ", itemId);
+        return itemService.getItem(itemId);
     }
 
     @GetMapping
     public Collection<ItemDto> getAllUserItems(@RequestHeader("X-Sharer-User-Id") @Positive Long userId) {
-        log.debug("Getting all user items for user {}", userId);
+        log.debug("Метод контроллера. Получение всех вещей пользователя с id {}", userId);
         return itemService.getAllUserItems(userId);
     }
 
 
     @GetMapping("/search")
     public Collection<ItemDto> searchItems(@RequestParam("text") String text) {
-        log.debug("Searching items for {}", text);
+        log.debug("Метод контроллера. Поиск вещей по входящей строке {}", text);
         return itemService.searchItems(text);
     }
 }

@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class ItemMemoryRepository implements ItemRepository {
-    Map<Long, Item> items = new HashMap<>();
-    Long nextId = 0L;
+    private final Map<Long, Item> items = new HashMap<>();
+    private Long nextId = 0L;
 
     private Long getNextId() {
         return ++nextId;
@@ -45,13 +45,12 @@ public class ItemMemoryRepository implements ItemRepository {
 
     @Override
     public Collection<Item> search(String text) {
-        if (text.isBlank()) {
-            return List.of();
-        }
-        return items.values().stream().filter(item ->
-                        item.getDescription().toLowerCase().contains(text.toLowerCase()) ||
-                                item.getName().toLowerCase().contains(text.toLowerCase()))
+        String searchText = text.toLowerCase().trim();
+        return items.values().stream()
                 .filter(Item::isAvailable)
+                .filter(item ->
+                        item.getDescription().toLowerCase().contains(searchText) ||
+                                item.getName().toLowerCase().contains(searchText))
                 .collect(Collectors.toList());
     }
 }

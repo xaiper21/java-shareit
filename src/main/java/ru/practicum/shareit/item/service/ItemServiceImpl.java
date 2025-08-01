@@ -9,23 +9,24 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateRequestDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.user.dao.UserMemoryRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class ItemServiceImpl implements ItemService {
-    ItemRepository itemRepository;
-    UserRepository userRepository;
+    private final ItemRepository itemRepository;
+    private final UserMemoryRepository userMemoryRepository;
 
     @Override
     public ItemDto addItem(ItemDto itemDto, Long userId) {
-        log.debug("Adding new item in service method");
-        User user = userRepository.getUser(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        log.debug("Метод сервиса. Добавление вещи {} пользователем с id {}", itemDto, userId);
+        User user = getUserOrThrow(userId);
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(user);
         item.setId(itemRepository.add(item));
@@ -34,12 +35,15 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(Long itemId, Long userId, ItemUpdateRequestDto itemDto) {
-        log.debug("Updating item in service method");
-        Item item = itemRepository.get(itemId).orElseThrow(() -> new NotFoundException("объект не найден"));
-        if (item.getOwner().getId() != userId) throw new NotFoundException("объект не найден");
+        log.debug("Метод сервиса. Обновление вещи с id {} пользователем с id {}, данные обновления: {}",
+                itemId, userId, itemDto);
+        Item item = getItemOrThrow(itemId);
+        if (item.getOwner().getId() != userId) {
+            throw new NotFoundException("Вещь с id = " + itemId + " не найдена или вы не авторизованы!");
+        }
 
-        if (itemDto.getName() != null) item.setName(itemDto.getName());
-        if (itemDto.getDescription() != null) item.setDescription(itemDto.getDescription());
+        if (checkStringNotNullAndNotEmpty(itemDto.getName())) item.setName(itemDto.getName());
+        if (checkStringNotNullAndNotEmpty(itemDto.getDescription())) item.setDescription(itemDto.getDescription());
         if (itemDto.getAvailable() != null) item.setAvailable(itemDto.getAvailable());
 
         itemRepository.update(item);
@@ -47,16 +51,15 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItemForAll(Long itemId) {
-        log.debug("Getting item for all in service method");
-        return ItemMapper.toItemDto(itemRepository.get(itemId)
-                .orElseThrow(() -> new NotFoundException("объект не найден")));
+    public ItemDto getItem(Long itemId) {
+        log.debug("Метод сервиса. Получение вещи с id {}", itemId);
+        return ItemMapper.toItemDto(getItemOrThrow(itemId));
     }
 
     @Override
     public Collection<ItemDto> getAllUserItems(Long userId) {
-        log.debug("Getting all user items in service method");
-        userRepository.getUser(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        log.debug("Метод сервиса. Получение всех вещей пользователя с id {}", userId);
+        getUserOrThrow(userId);
         return itemRepository.getUserItems(userId).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
@@ -64,7 +67,28 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemDto> searchItems(String text) {
-        log.debug("Searching items in service method");
-        return itemRepository.search(text).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
+        log.debug("Метод сервиса. Поиск вещей по входящей строке - {}", text);
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+        return itemRepository.search(text).stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
+    }
+
+    private User getUserOrThrow(Long userId) {
+        return userMemoryRepository
+                .getUser(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + "не найден!"));
+    }
+
+    private Item getItemOrThrow(Long itemId) {
+        return itemRepository
+                .get(itemId)
+                .orElseThrow(() -> new NotFoundException("Вещь с id = " + itemId + " не найдена!"));
+    }
+
+    private boolean checkStringNotNullAndNotEmpty(String value) {
+        return value != null && !value.isBlank();
     }
 }

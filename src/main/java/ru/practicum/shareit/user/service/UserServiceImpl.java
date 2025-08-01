@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.user.dao.UserMemoryRepository;
 import ru.practicum.shareit.user.dto.UserCreateRequestDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateRequestDto;
@@ -16,48 +16,55 @@ import ru.practicum.shareit.user.model.User;
 @Slf4j
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
-    UserRepository userRepository;
+    private final UserMemoryRepository userMemoryRepository;
 
     @Override
     public UserDto addUser(UserCreateRequestDto userCreate) {
-        log.debug("Adding user {} in service", userCreate);
-        if (userRepository.containsEmail(userCreate.getEmail())) {
+        log.debug("Метод сервиса. Добавление пользователя {}", userCreate);
+        if (userMemoryRepository.containsEmail(userCreate.getEmail())) {
             throw new ConflictException(userCreate.getEmail() + " already exists");
         }
         User user = UserMapper.toUser(userCreate);
-        user.setId(userRepository.addUser(user));
+        user.setId(userMemoryRepository.addUser(user));
         return UserMapper.toUserDto(user);
     }
 
     @Override
     public UserDto updateUser(UserUpdateRequestDto userDto, Long userId) {
-        log.debug("Updating user {}, userId = {} in service", userDto, userId);
-        User user = userRepository.getUser(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        log.debug("Метод сервиса. Обновление пользователя {} с id = {}", userDto, userId);
+        User user = getUserOrThrow(userId);
 
         if (userDto.getEmail() != null) {
 
-            if (!userDto.getEmail().equals(user.getEmail()) && userRepository.containsEmail(userDto.getEmail())) {
-                throw new ConflictException(userDto.getEmail() + " already exists");
+            if (!userDto.getEmail().equals(user.getEmail()) && userMemoryRepository.containsEmail(userDto.getEmail())) {
+                throw new ConflictException(userDto.getEmail() + " этот email уже используется");
             }
             user.setEmail(userDto.getEmail());
         }
-        if (userDto.getName() != null) {
+
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
             user.setName(userDto.getName());
         }
-        userRepository.updateUser(user);
+        userMemoryRepository.updateUser(user);
         return UserMapper.toUserDto(user);
     }
 
     @Override
     public boolean deleteUser(long userId) {
-        log.debug("Deleting user by id {} in service", userId);
-        return userRepository.deleteUser(userId);
+        log.debug("Метод сервиса. Удаление пользователя с id {}", userId);
+        getUserOrThrow(userId);
+        return userMemoryRepository.deleteUser(userId);
     }
 
     @Override
     public UserDto getUser(long userId) {
-        log.debug("Getting user by id {} in service", userId);
-        return UserMapper.toUserDto(userRepository.getUser(userId).orElseThrow(()
-                -> new NotFoundException("User not found")));
+        log.debug("Метод сервиса. Получение пользователя с id {}", userId);
+        return UserMapper.toUserDto(getUserOrThrow(userId));
+    }
+
+    private User getUserOrThrow(long userId) {
+        return userMemoryRepository
+                .getUser(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден с id = " + userId));
     }
 }
