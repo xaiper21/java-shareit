@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
             user.setName(userDto.getName());
         }
         userRepository.updateUser(user);
-        return  UserMapper.toUserDto(user);
+        return UserMapper.toUserDto(user);
     }
 
     @Override

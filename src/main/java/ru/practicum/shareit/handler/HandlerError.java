@@ -15,15 +15,15 @@ import ru.practicum.shareit.exception.NotFoundException;
 public class HandlerError {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(value={NotFoundException.class})
-    public ResponseError notFound(Exception e){
+    @ExceptionHandler(value = {NotFoundException.class})
+    public ResponseError notFound(Exception e) {
         log.debug("Not found exception {}", e.getMessage());
         return new ResponseError(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(value={ConflictException.class})
-    public ResponseError conflict(Exception e){
+    @ExceptionHandler(value = {ConflictException.class})
+    public ResponseError conflict(Exception e) {
         log.debug("Conflict exception {}", e.getMessage());
         return new ResponseError(e.getMessage());
     }

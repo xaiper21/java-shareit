@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user.dao;
 
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.HashMap;
@@ -13,13 +12,16 @@ public class UserRepository {
     Map<Long, User> users = new HashMap<>();
     long nextId = 0L;
 
-    private long getNextId(){
+    private long getNextId() {
         return ++nextId;
     }
-    public boolean containsEmail(String email){
-        if (users.isEmpty()){return false;}
-        for(User user : users.values()){
-            if(user.getEmail().equals(email)){
+
+    public boolean containsEmail(String email) {
+        if (users.isEmpty()) {
+            return false;
+        }
+        for (User user : users.values()) {
+            if (user.getEmail().equals(email)) {
                 return true;
             }
         }
@@ -29,7 +31,7 @@ public class UserRepository {
     public long addUser(User user) {
         long userId = getNextId();
         user.setId(userId);
-        users.put(userId,user);
+        users.put(userId, user);
         return userId;
     }
 

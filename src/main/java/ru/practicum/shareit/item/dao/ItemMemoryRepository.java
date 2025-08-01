@@ -49,8 +49,8 @@ public class ItemMemoryRepository implements ItemRepository {
             return List.of();
         }
         return items.values().stream().filter(item ->
-                item.getDescription().toLowerCase().contains(text.toLowerCase()) ||
-                        item.getName().toLowerCase().contains(text.toLowerCase()))
+                        item.getDescription().toLowerCase().contains(text.toLowerCase()) ||
+                                item.getName().toLowerCase().contains(text.toLowerCase()))
                 .filter(Item::isAvailable)
                 .collect(Collectors.toList());
     }
