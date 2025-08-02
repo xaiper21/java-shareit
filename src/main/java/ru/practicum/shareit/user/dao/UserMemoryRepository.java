@@ -9,8 +9,8 @@ import java.util.Optional;
 
 @Component
 public class UserMemoryRepository implements UserRepository {
-    Map<Long, User> users = new HashMap<>();
-    long nextId = 0L;
+    private final Map<Long, User> users = new HashMap<>();
+    private long nextId = 0L;
 
     private long getNextId() {
         return ++nextId;

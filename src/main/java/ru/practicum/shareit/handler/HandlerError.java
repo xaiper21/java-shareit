@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.practicum.shareit.exception.ConflictException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 
 @ResponseBody
@@ -25,6 +26,13 @@ public class HandlerError {
     @ExceptionHandler(value = {ConflictException.class})
     public ResponseError conflict(Exception e) {
         log.debug("Conflict exception {}", e.getMessage());
+        return new ResponseError(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(value = {ForbiddenException.class})
+    public ResponseError forbidden(Exception e) {
+        log.debug("Forbidden exception {}", e.getMessage());
         return new ResponseError(e.getMessage());
     }
 }

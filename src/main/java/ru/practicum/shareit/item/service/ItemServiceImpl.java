@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dao.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -37,9 +38,10 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto updateItem(Long itemId, Long userId, ItemUpdateRequestDto itemDto) {
         log.debug("Метод сервиса. Обновление вещи с id {} пользователем с id {}, данные обновления: {}",
                 itemId, userId, itemDto);
+        getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
         if (item.getOwner().getId() != userId) {
-            throw new NotFoundException("Вещь с id = " + itemId + " не найдена или вы не авторизованы!");
+            throw new ForbiddenException("У вас нет доступа к ресурсу");
         }
 
         if (checkStringNotNullAndNotEmpty(itemDto.getName())) item.setName(itemDto.getName());

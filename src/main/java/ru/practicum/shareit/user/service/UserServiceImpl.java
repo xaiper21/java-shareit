@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
     public UserDto addUser(UserCreateRequestDto userCreate) {
         log.debug("Метод сервиса. Добавление пользователя {}", userCreate);
         if (userMemoryRepository.containsEmail(userCreate.getEmail())) {
-            throw new ConflictException(userCreate.getEmail() + " already exists");
+            throw new ConflictException(userCreate.getEmail() + " этот email уже используется");
         }
         User user = UserMapper.toUser(userCreate);
         user.setId(userMemoryRepository.addUser(user));
