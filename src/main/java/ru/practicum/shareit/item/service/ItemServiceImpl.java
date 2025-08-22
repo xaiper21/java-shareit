@@ -8,13 +8,14 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dal.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.ForbiddenException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.comment.Comment;
 import ru.practicum.shareit.item.comment.CommentRepository;
 import ru.practicum.shareit.item.comment.dto.CommentCreateRequestDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.mapper.CommentMapper;
-import ru.practicum.shareit.exception.ForbiddenException;
-import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dao.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateRequestDto;
@@ -25,6 +26,7 @@ import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +65,6 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
 
-
     @Override
     public ItemDto getItem(Long itemId, Long userId) {
         log.info("Получение вещи с id={} для пользователя с id={}", itemId, userId);
@@ -76,16 +77,23 @@ public class ItemServiceImpl implements ItemService {
         ItemDto itemDto = ItemMapper.toItemDto(item);
         itemDto.setComments(comments);
 
+        // Если пользователь - владелец, добавляем информацию о бронированиях
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
-            List<Booking> lastBookings = bookingRepository.findLastBooking(itemId, now);
-            List<Booking> nextBookings = bookingRepository.findNextBooking(itemId, now);
-            if (!lastBookings.isEmpty()) {
-                itemDto.setLastBooking(BookingMapper.toBookingDto(lastBookings.get(0)));
-            }
-            if (!nextBookings.isEmpty()) {
-                itemDto.setNextBooking(BookingMapper.toBookingDto(nextBookings.get(0)));
-            }
+            List<Booking> itemBookings = bookingRepository.findByItemOwnerIdAndStatusAndItem_Id(
+                    userId, BookingStatus.APPROVED, itemId);
+
+            // Находим последнее бронирование, которое уже завершилось
+            itemBookings.stream()
+                    .filter(b -> b.getEnd().isBefore(now))
+                    .max(Comparator.comparing(Booking::getEnd))
+                    .ifPresent(b -> itemDto.setLastBooking(BookingMapper.toBookingDto(b)));
+
+            // Находим следующее бронирование, которое еще не началось
+            itemBookings.stream()
+                    .filter(b -> b.getStart().isAfter(now))
+                    .min(Comparator.comparing(Booking::getStart))
+                    .ifPresent(b -> itemDto.setNextBooking(BookingMapper.toBookingDto(b)));
         }
         return itemDto;
     }
@@ -94,7 +102,7 @@ public class ItemServiceImpl implements ItemService {
     public Collection<ItemDto> getAllUserItems(Long userId) {
         log.debug("Метод сервиса. Получение всех вещей пользователя с id {}", userId);
         getUserOrThrow(userId);
-        return itemRepository.findAllItemsByOwnerId(userId).stream()
+        return itemRepository.findByOwnerId(userId).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
@@ -115,11 +123,16 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addComment(long itemId, long userId, CommentCreateRequestDto commentCreateDto) {
         User user = getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
+
+        if (commentCreateDto.getText() == null || commentCreateDto.getText().isBlank()) {
+            throw new BadRequestException("Текст комментария не может быть пустым.");
+        }
+
         List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndEndBeforeAndStatus(
                 userId, itemId, LocalDateTime.now(), BookingStatus.APPROVED);
 
         if (bookings.isEmpty()) {
-            throw new ForbiddenException(
+            throw new BadRequestException(
                     "Вы не можете комментировать эту вещь, так как у вас нет завершенных бронирований.");
         }
 
@@ -134,7 +147,7 @@ public class ItemServiceImpl implements ItemService {
     private User getUserOrThrow(Long userId) {
         return userRepository
                 .findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + "не найден!"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден!"));
     }
 
     private Item getItemOrThrow(Long itemId) {
