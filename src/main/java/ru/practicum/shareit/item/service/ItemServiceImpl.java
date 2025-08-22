@@ -115,9 +115,9 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addComment(long itemId, long userId, CommentCreateRequestDto commentCreateDto) {
         User user = getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
-
-        List<Booking> bookings = bookingRepository.findBookingsForComment(
+        List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndEndBeforeAndStatus(
                 userId, itemId, LocalDateTime.now(), BookingStatus.APPROVED);
+
         if (bookings.isEmpty()) {
             throw new ForbiddenException(
                     "Вы не можете комментировать эту вещь, так как у вас нет завершенных бронирований.");

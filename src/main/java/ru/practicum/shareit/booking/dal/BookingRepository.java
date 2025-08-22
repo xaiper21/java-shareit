@@ -34,10 +34,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             Long ownerId, LocalDateTime start, LocalDateTime end, Sort sort);
 
     Collection<Booking> findByItem_OwnerIdAndStatus(Long ownerId, BookingStatus status, Sort sort);
-
-    @Query("SELECT b FROM Booking b WHERE b.booker.id = ?1 AND b.item.id = ?2 AND b.end < ?3 AND b.status = ?4")
-    List<Booking> findBookingsForComment(long userId, long itemId, LocalDateTime now, BookingStatus status);
-
+    
     @Query("SELECT b FROM Booking b WHERE b.item.id = :itemId AND b.status = 'APPROVED' AND b.start < :now " +
             "ORDER BY b.start DESC")
     List<Booking> findLastBooking(@Param("itemId") Long itemId, @Param("now") LocalDateTime now);
@@ -45,4 +42,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b FROM Booking b WHERE b.item.id = :itemId AND b.status = 'APPROVED' AND b.start > :now " +
             "ORDER BY b.start ASC")
     List<Booking> findNextBooking(@Param("itemId") Long itemId, @Param("now") LocalDateTime now);
+
+
+    List<Booking> findByBookerIdAndItemIdAndEndBeforeAndStatus(
+            long bookerId, long itemId, LocalDateTime now, BookingStatus status);
 }
