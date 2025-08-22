@@ -40,7 +40,7 @@ public class HandlerError {
         log.debug("Forbidden exception {}", e.getMessage());
         return new ResponseError(e.getMessage());
     }
-    
+
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler
     public ResponseError allOtherExceptions(Exception e) {
