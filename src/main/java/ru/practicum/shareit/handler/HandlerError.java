@@ -6,9 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import ru.practicum.shareit.exception.ConflictException;
-import ru.practicum.shareit.exception.ForbiddenException;
-import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.*;
 
 @ResponseBody
 @ControllerAdvice
@@ -16,7 +14,7 @@ import ru.practicum.shareit.exception.NotFoundException;
 public class HandlerError {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(value = {NotFoundException.class})
+    @ExceptionHandler(value = {NotFoundException.class, UnsupportedStatusException.class})
     public ResponseError notFound(Exception e) {
         log.debug("Not found exception {}", e.getMessage());
         return new ResponseError(e.getMessage());
@@ -33,6 +31,13 @@ public class HandlerError {
     @ExceptionHandler(value = {ForbiddenException.class})
     public ResponseError forbidden(Exception e) {
         log.debug("Forbidden exception {}", e.getMessage());
+        return new ResponseError(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(value = {BadRequestException.class})
+    public ResponseError badRequest(Exception e) {
+        log.debug("Bad Request exception {}", e.getMessage());
         return new ResponseError(e.getMessage());
     }
 }
