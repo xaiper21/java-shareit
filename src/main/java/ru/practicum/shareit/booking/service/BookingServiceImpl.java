@@ -96,7 +96,7 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = findBookingOrThrow(bookingId);
         if (!booking.getStatus().equals(BookingStatus.WAITING))
             throw new BadRequestException("Статус вещи должен быть  WAITING");
-        if (booking.getItem().getOwner().getId() != userId) {
+        if (!booking.getItem().getOwner().getId().equals(userId)) {
             throw new ForbiddenException("У вас нет прав к ресурсу");
         } else {
             if (isApproved) {

@@ -52,7 +52,7 @@ public class ItemServiceImpl implements ItemService {
                 itemId, userId, itemDto);
         getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
-        if (item.getOwner().getId() != userId) {
+        if (!item.getOwner().getId().equals(userId)) {
             throw new ForbiddenException("У вас нет доступа к ресурсу");
         }
 
