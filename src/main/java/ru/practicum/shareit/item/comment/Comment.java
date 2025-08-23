@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "comments")
-@Builder
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,4 +31,5 @@ public class Comment {
 
     @Column(nullable = false)
     LocalDateTime created;
+
 }

@@ -77,19 +77,16 @@ public class ItemServiceImpl implements ItemService {
         ItemDto itemDto = ItemMapper.toItemDto(item);
         itemDto.setComments(comments);
 
-        // Если пользователь - владелец, добавляем информацию о бронированиях
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
             List<Booking> itemBookings = bookingRepository.findByItemOwnerIdAndStatusAndItem_Id(
                     userId, BookingStatus.APPROVED, itemId);
 
-            // Находим последнее бронирование, которое уже завершилось
             itemBookings.stream()
                     .filter(b -> b.getEnd().isBefore(now))
                     .max(Comparator.comparing(Booking::getEnd))
                     .ifPresent(b -> itemDto.setLastBooking(BookingMapper.toBookingDto(b)));
 
-            // Находим следующее бронирование, которое еще не началось
             itemBookings.stream()
                     .filter(b -> b.getStart().isAfter(now))
                     .min(Comparator.comparing(Booking::getStart))
@@ -136,11 +133,11 @@ public class ItemServiceImpl implements ItemService {
                     "Вы не можете комментировать эту вещь, так как у вас нет завершенных бронирований.");
         }
 
-        Comment comment = Comment.builder()
-                .created(LocalDateTime.now())
-                .author(user)
-                .item(item)
-                .text(commentCreateDto.getText()).build();
+        Comment comment = new Comment();
+        comment.setCreated(LocalDateTime.now());
+        comment.setAuthor(user);
+        comment.setItem(item);
+        comment.setText(commentCreateDto.getText());
         return CommentMapper.mapToDto(commentRepository.save(comment));
     }
 
