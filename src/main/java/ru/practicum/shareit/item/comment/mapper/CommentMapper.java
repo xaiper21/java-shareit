@@ -20,7 +20,7 @@ public class CommentMapper {
         return commentDto;
     }
 
-    public static Comment buildComment(User user, Item item, CommentCreateRequestDto commentCreateDto){
+    public static Comment buildComment(User user, Item item, CommentCreateRequestDto commentCreateDto) {
         Comment comment = new Comment();
         comment.setCreated(LocalDateTime.now());
         comment.setAuthor(user);
