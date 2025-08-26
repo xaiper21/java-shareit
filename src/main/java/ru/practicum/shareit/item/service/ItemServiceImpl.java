@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.comment.Comment;
 import ru.practicum.shareit.item.comment.CommentRepository;
 import ru.practicum.shareit.item.comment.dto.CommentCreateRequestDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
@@ -24,9 +25,7 @@ import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -95,11 +94,53 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDto> getAllUserItems(Long userId) {
-        log.debug("Метод сервиса. Получение всех вещей пользователя с id {}", userId);
-        getUserOrThrow(userId);
-        return itemRepository.findByOwnerIdFetch(userId).stream()
-                .map(ItemMapper::toItemDto)
+    public List<ItemDto> getAllUserItems(Long userId) {
+        log.info("Получение всех вещей для пользователя с id={}", userId);
+
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Пользователь не найден.");
+        }
+
+        Collection<Item> userItems = itemRepository.findByOwnerId(userId);
+
+        if (userItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Booking> approvedBookings = bookingRepository.findAllByItemInAndStatus(userItems, BookingStatus.APPROVED);
+
+        Collection<Comment> itemComments = commentRepository.findAllByItemIn(userItems);
+
+        Map<Long, List<Booking>> bookingsByItemId = approvedBookings.stream()
+                .collect(Collectors.groupingBy(booking -> booking.getItem().getId()));
+
+        Map<Long, List<Comment>> commentsByItemId = itemComments.stream()
+                .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
+
+        LocalDateTime now = LocalDateTime.now();
+        return userItems.stream()
+                .map(item -> {
+                    ItemDto itemDto = ItemMapper.toItemDto(item);
+
+                    List<CommentDto> comments = commentsByItemId.getOrDefault(item.getId(), Collections.emptyList()).stream()
+                            .map(CommentMapper::mapToDto)
+                            .collect(Collectors.toList());
+                    itemDto.setComments(comments);
+
+                    List<Booking> itemBookings = bookingsByItemId.getOrDefault(item.getId(), Collections.emptyList());
+
+                    itemBookings.stream()
+                            .filter(b -> b.getEnd().isBefore(now))
+                            .max(Comparator.comparing(Booking::getEnd))
+                            .ifPresent(b -> itemDto.setLastBooking(BookingMapper.toBookingDto(b)));
+
+                    itemBookings.stream()
+                            .filter(b -> b.getStart().isAfter(now))
+                            .min(Comparator.comparing(Booking::getStart))
+                            .ifPresent(b -> itemDto.setNextBooking(BookingMapper.toBookingDto(b)));
+
+                    return itemDto;
+                })
                 .collect(Collectors.toList());
     }
 
