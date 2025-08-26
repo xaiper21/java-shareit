@@ -13,6 +13,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @EntityGraph(attributePaths = "owner")
     Collection<Item> findByOwnerId(Long ownerId);
 
+    @EntityGraph(attributePaths = "owner")
     @Query("SELECT i FROM Item i " +
             "LEFT JOIN FETCH i.comments " +
             "LEFT JOIN FETCH i.bookings " +
