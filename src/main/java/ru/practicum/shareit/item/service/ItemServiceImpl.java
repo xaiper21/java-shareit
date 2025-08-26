@@ -11,7 +11,6 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.comment.Comment;
 import ru.practicum.shareit.item.comment.CommentRepository;
 import ru.practicum.shareit.item.comment.dto.CommentCreateRequestDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
@@ -99,7 +98,7 @@ public class ItemServiceImpl implements ItemService {
     public Collection<ItemDto> getAllUserItems(Long userId) {
         log.debug("Метод сервиса. Получение всех вещей пользователя с id {}", userId);
         getUserOrThrow(userId);
-        return itemRepository.findByOwnerId(userId).stream()
+        return itemRepository.findByOwnerIdFetch(userId).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
@@ -121,10 +120,6 @@ public class ItemServiceImpl implements ItemService {
         User user = getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
 
-        if (commentCreateDto.getText() == null || commentCreateDto.getText().isBlank()) {
-            throw new BadRequestException("Текст комментария не может быть пустым.");
-        }
-
         List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndEndBeforeAndStatus(
                 userId, itemId, LocalDateTime.now(), BookingStatus.APPROVED);
 
@@ -133,12 +128,7 @@ public class ItemServiceImpl implements ItemService {
                     "Вы не можете комментировать эту вещь, так как у вас нет завершенных бронирований.");
         }
 
-        Comment comment = new Comment();
-        comment.setCreated(LocalDateTime.now());
-        comment.setAuthor(user);
-        comment.setItem(item);
-        comment.setText(commentCreateDto.getText());
-        return CommentMapper.mapToDto(commentRepository.save(comment));
+        return CommentMapper.mapToDto(commentRepository.save(CommentMapper.buildComment(user, item, commentCreateDto)));
     }
 
     private User getUserOrThrow(Long userId) {

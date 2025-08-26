@@ -39,17 +39,17 @@ public class BookingServiceImpl implements BookingService {
         this.userRepository = userRepository;
 
         Sort sort = Sort.by("start").descending();
-        LocalDateTime now = LocalDateTime.now();
 
         this.bookerBookingStrategies = Map.of(
                 BookingState.ALL,
                 userId -> bookingRepository.findByBookerId(userId, sort),
                 BookingState.PAST,
-                userId -> bookingRepository.findByBookerIdAndEndBefore(userId, now, sort),
+                userId -> bookingRepository.findByBookerIdAndEndBefore(userId, LocalDateTime.now(), sort),
                 BookingState.FUTURE,
-                userId -> bookingRepository.findByBookerIdAndStartAfter(userId, now, sort),
+                userId -> bookingRepository.findByBookerIdAndStartAfter(userId, LocalDateTime.now(), sort),
                 BookingState.CURRENT,
-                userId -> bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(userId, now, now, sort),
+                userId -> bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(userId, LocalDateTime.now(),
+                        LocalDateTime.now(), sort),
                 BookingState.WAITING,
                 userId -> bookingRepository.findByBookerIdAndStatus(userId, BookingStatus.WAITING, sort),
                 BookingState.REJECTED,
@@ -60,11 +60,12 @@ public class BookingServiceImpl implements BookingService {
                 BookingState.ALL,
                 userId -> bookingRepository.findByItem_OwnerId(userId, sort),
                 BookingState.PAST,
-                userId -> bookingRepository.findByItem_OwnerIdAndEndBefore(userId, now, sort),
+                userId -> bookingRepository.findByItem_OwnerIdAndEndBefore(userId, LocalDateTime.now(), sort),
                 BookingState.FUTURE,
-                userId -> bookingRepository.findByItem_OwnerIdAndStartAfter(userId, now, sort),
+                userId -> bookingRepository.findByItem_OwnerIdAndStartAfter(userId, LocalDateTime.now(), sort),
                 BookingState.CURRENT,
-                userId -> bookingRepository.findByItem_OwnerIdAndStartBeforeAndEndAfter(userId, now, now, sort),
+                userId -> bookingRepository.findByItem_OwnerIdAndStartBeforeAndEndAfter(userId,
+                        LocalDateTime.now(), LocalDateTime.now(), sort),
                 BookingState.WAITING,
                 userId -> bookingRepository.findByItem_OwnerIdAndStatus(userId, BookingStatus.WAITING, sort),
                 BookingState.REJECTED,

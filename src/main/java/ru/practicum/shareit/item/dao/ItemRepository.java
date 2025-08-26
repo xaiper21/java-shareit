@@ -13,6 +13,12 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @EntityGraph(attributePaths = "owner")
     Collection<Item> findByOwnerId(Long ownerId);
 
+    @Query("SELECT i FROM Item i " +
+            "LEFT JOIN FETCH i.comments " +
+            "LEFT JOIN FETCH i.bookings " +
+            "WHERE i.id = :itemId")
+    Collection<Item> findByOwnerIdFetch(Long ownerId);
+
     @Query(" select i from Item i " +
             "where i.available = true " +
             " and (upper(i.name) like upper(concat('%', ?1, '%')) " +
