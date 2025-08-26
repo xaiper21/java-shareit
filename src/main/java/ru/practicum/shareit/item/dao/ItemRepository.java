@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.dao;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collection;
@@ -14,11 +15,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     Collection<Item> findByOwnerId(Long ownerId);
 
     @EntityGraph(attributePaths = "owner")
-    @Query("SELECT i FROM Item i " +
-            "LEFT JOIN FETCH i.comments " +
-            "LEFT JOIN FETCH i.bookings " +
-            "WHERE i.id = :itemId")
-    Collection<Item> findByOwnerIdFetch(Long ownerId);
+    @Query("SELECT i FROM Item i LEFT JOIN FETCH i.comments LEFT JOIN FETCH i.bookings WHERE i.owner.id = :ownerId")
+    Collection<Item> findByOwnerIdFetch(@Param("ownerId") Long ownerId);
 
     @Query(" select i from Item i " +
             "where i.available = true " +
