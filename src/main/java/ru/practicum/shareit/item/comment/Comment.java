@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.item.comment;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,27 +11,24 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "bookings")
-public class Booking {
+@Table(name = "comments")
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
 
-    @Column(name = "start_date")
-    LocalDateTime start;
+    @Column(nullable = false)
+    String text;
 
-    @Column(name = "end_date")
-    LocalDateTime end;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
     Item item;
 
-    @ManyToOne
-    @JoinColumn(name = "booker_id", nullable = false)
-    User booker;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    User author;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    BookingStatus status;
+    LocalDateTime created;
+
 }

@@ -1,10 +1,13 @@
 package ru.practicum.shareit.item.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.comment.dto.CommentCreateRequestDto;
+import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateRequestDto;
 import ru.practicum.shareit.item.service.ItemService;
@@ -38,9 +41,10 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItem(@PathVariable("itemId") Long itemId) {
-        log.debug("Метод контроллера. Получени вещи с id {} ", itemId);
-        return itemService.getItem(itemId);
+    public ItemDto getItem(@PathVariable("itemId") @Positive @NotNull Long itemId,
+                           @RequestHeader("X-Sharer-User-Id") Long userId) {
+        log.debug("Метод контроллера. Получение вещи с id {} для пользователя с id {}", itemId, userId);
+        return itemService.getItem(itemId, userId);
     }
 
     @GetMapping
@@ -54,5 +58,12 @@ public class ItemController {
     public Collection<ItemDto> searchItems(@RequestParam("text") String text) {
         log.debug("Метод контроллера. Поиск вещей по входящей строке {}", text);
         return itemService.searchItems(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addComment(@PathVariable("itemId") @Positive @NotNull Long itemId,
+                                 @RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @RequestBody @Valid CommentCreateRequestDto comment) {
+        return itemService.addComment(itemId, userId, comment);
     }
 }

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dao.UserMemoryRepository;
+import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.dto.UserCreateRequestDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateRequestDto;
@@ -16,17 +16,17 @@ import ru.practicum.shareit.user.model.User;
 @Slf4j
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final UserMemoryRepository userMemoryRepository;
+    private final UserRepository userRepository;
 
     @Override
     public UserDto addUser(UserCreateRequestDto userCreate) {
         log.debug("Метод сервиса. Добавление пользователя {}", userCreate);
-        if (userMemoryRepository.containsEmail(userCreate.getEmail())) {
+        if (userRepository.existsUserByEmail(userCreate.getEmail())) {
             throw new ConflictException(userCreate.getEmail() + " этот email уже используется");
         }
+
         User user = UserMapper.toUser(userCreate);
-        user.setId(userMemoryRepository.addUser(user));
-        return UserMapper.toUserDto(user);
+        return UserMapper.toUserDto(userRepository.save(user));
     }
 
     @Override
@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
 
         if (userDto.getEmail() != null) {
 
-            if (!userDto.getEmail().equals(user.getEmail()) && userMemoryRepository.containsEmail(userDto.getEmail())) {
+            if (!userDto.getEmail().equals(user.getEmail()) && (userRepository.existsUserByEmail(userDto.getEmail()))) {
                 throw new ConflictException(userDto.getEmail() + " этот email уже используется");
             }
             user.setEmail(userDto.getEmail());
@@ -45,15 +45,16 @@ public class UserServiceImpl implements UserService {
         if (userDto.getName() != null && !userDto.getName().isBlank()) {
             user.setName(userDto.getName());
         }
-        userMemoryRepository.updateUser(user);
-        return UserMapper.toUserDto(user);
+
+        return UserMapper.toUserDto(userRepository.save(user));
     }
 
     @Override
     public boolean deleteUser(long userId) {
         log.debug("Метод сервиса. Удаление пользователя с id {}", userId);
         getUserOrThrow(userId);
-        return userMemoryRepository.deleteUser(userId);
+        userRepository.deleteById(userId);
+        return true;
     }
 
     @Override
@@ -62,9 +63,9 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(getUserOrThrow(userId));
     }
 
-    private User getUserOrThrow(long userId) {
-        return userMemoryRepository
-                .getUser(userId)
+    private User getUserOrThrow(Long userId) {
+        return userRepository
+                .findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден с id = " + userId));
     }
 }
