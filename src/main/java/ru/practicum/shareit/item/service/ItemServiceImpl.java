@@ -17,10 +17,13 @@ import ru.practicum.shareit.item.comment.dto.CommentCreateRequestDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.mapper.CommentMapper;
 import ru.practicum.shareit.item.dao.ItemRepository;
+import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateRequestDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
@@ -36,12 +39,14 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final BookingRepository bookingRepository;
+    private final ItemRequestRepository requestRepository;
 
     @Override
-    public ItemDto addItem(ItemDto itemDto, Long userId) {
+    public ItemDto addItem(ItemCreateDto itemDto, Long userId) {
         log.debug("Метод сервиса. Добавление вещи {} пользователем с id {}", itemDto, userId);
         User user = getUserOrThrow(userId);
-        Item item = ItemMapper.toItem(itemDto);
+        ItemRequest itemRequest = itemDto.getRequestId() != null ? getItemRequestOrThrow(itemDto.getRequestId()) : null;
+        Item item = ItemMapper.toItem(itemDto, itemRequest);
         item.setOwner(user);
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
@@ -186,5 +191,10 @@ public class ItemServiceImpl implements ItemService {
 
     private boolean checkStringNotNullAndNotEmpty(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private ItemRequest getItemRequestOrThrow(Long requestId) {
+        return requestRepository.findById(requestId).orElseThrow(
+                () -> new NotFoundException("Запрос не найден с id = " + requestId));
     }
 }

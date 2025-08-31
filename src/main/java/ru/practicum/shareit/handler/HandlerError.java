@@ -2,6 +2,7 @@ package ru.practicum.shareit.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -21,7 +22,8 @@ public class HandlerError {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(value = {UnsupportedStatusException.class, BadRequestException.class})
+    @ExceptionHandler(value = {UnsupportedStatusException.class, BadRequestException.class,
+            MethodArgumentNotValidException.class})
     public ResponseError badRequest(Exception e) {
         log.debug("Bad Request exception {}", e.getMessage());
         return new ResponseError(e.getMessage());

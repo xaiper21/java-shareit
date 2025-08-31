@@ -5,9 +5,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.comment.dto.CommentCreateRequestDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateRequestDto;
 import ru.practicum.shareit.item.service.ItemService;
@@ -26,11 +28,13 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto addItem(@Valid @RequestBody ItemDto itemDto,
+    public ItemDto addItem(@Valid @RequestBody ItemCreateDto itemDto,
                            @RequestHeader("X-Sharer-User-Id") Long userId) {
-        log.debug("Метод контроллера. Добавление новой вещи {} где id пользователя {}", itemDto, userId);
+        log.debug("Метод контроллера. Добавление новой вещи {} где id пользователя {} requestId = {}",
+                itemDto, userId);
         return itemService.addItem(itemDto, userId);
     }
+
 
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@PathVariable("itemId") Long itemId,

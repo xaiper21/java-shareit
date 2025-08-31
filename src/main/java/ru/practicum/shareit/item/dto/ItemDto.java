@@ -5,22 +5,26 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
-import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
 
 @Data
 public class ItemDto {
-    long id;
+    private Long id;
+
     @NotBlank
-    String name;
+    private String name;
+
     @NotBlank
-    String description;
+    private String description;
+
     @NotNull
-    Boolean available;
-    User owner;
-    String request;
-    Collection<CommentDto> comments;
+    private Boolean available;
+
+    private Long ownerId;
+    private Long requestId;
+
+    private Collection<CommentDto> comments;
     private BookingDto lastBooking;
     private BookingDto nextBooking;
 }
